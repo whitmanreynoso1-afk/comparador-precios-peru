@@ -6,7 +6,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hero-bg {
-            /* Fondo con gradiente oscuro y enlace directo a antigüedades */
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
                         url('https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1600&q=80');
             background-size: cover;
@@ -17,10 +16,10 @@
 <body class="bg-stone-50 font-sans">
     
     <!-- Header -->
-    <header class="bg-white shadow-sm p-4">
+    <header class="bg-white shadow-sm p-4 sticky top-0 z-40">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-4xl font-black text-stone-800 tracking-tighter">USADOS<span class="text-amber-700">.pe</span></h1>
-            <button class="bg-amber-700 hover:bg-amber-800 text-white px-6 py-2 rounded-full font-bold transition">Vender Objeto</button>
+            <button onclick="abrirModalVenta()" class="bg-amber-700 hover:bg-amber-800 text-white px-6 py-2 rounded-full font-bold transition shadow-md">Vender Objeto</button>
         </div>
     </header>
 
@@ -28,30 +27,177 @@
     <div class="hero-bg py-24 text-center text-white">
         <h2 class="text-5xl font-bold mb-6">Encuentra piezas con historia y valor</h2>
         <div class="max-w-3xl mx-auto bg-white p-2 rounded-full shadow-2xl flex items-center">
-            <input type="text" placeholder="¿Qué antigüedad buscas hoy?" class="w-full p-4 text-stone-800 rounded-full outline-none px-6">
-            <button class="bg-amber-700 text-white px-8 py-4 rounded-full font-bold hover:bg-amber-800 transition">Buscar</button>
+            <input type="text" id="inputBusqueda" placeholder="¿Qué antigüedad buscas hoy?" class="w-full p-4 text-stone-800 rounded-full outline-none px-6">
+            <button onclick="buscarProductos()" class="bg-amber-700 text-white px-8 py-4 rounded-full font-bold hover:bg-amber-800 transition">Buscar</button>
         </div>
     </div>
 
     <!-- Categorías -->
     <div class="max-w-6xl mx-auto py-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-        <div class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
+        <div onclick="filtrarCategoria('Casas')" class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
             <div class="text-4xl mb-2">🏠</div>
             <p class="font-bold">Casas</p>
         </div>
-        <div class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
+        <div onclick="filtrarCategoria('Vehículos')" class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
             <div class="text-4xl mb-2">🚗</div>
             <p class="font-bold">Vehículos</p>
         </div>
-        <div class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
+        <div onclick="filtrarCategoria('Enceres')" class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
             <div class="text-4xl mb-2">🛋️</div>
             <p class="font-bold">Enceres</p>
         </div>
-        <div class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
+        <div onclick="filtrarCategoria('Equipos Electrónicos')" class="p-8 bg-white rounded-3xl shadow-sm border border-stone-100 cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all">
             <div class="text-4xl mb-2">💻</div>
             <p class="font-bold">Electrónicos</p>
         </div>
     </div>
 
+    <!-- Listado de Productos -->
+    <main class="max-w-6xl mx-auto px-4 pb-20">
+        <h3 class="text-2xl font-bold text-stone-800 mb-6">Publicaciones Recientes</h3>
+        <div id="gridProductos" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Se cargan dinámicamente -->
+        </div>
+    </main>
+
+    <!-- Modal para Vender / Registrarse para Vender -->
+    <div id="modalVenta" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white p-8 rounded-3xl max-w-lg w-full shadow-2xl my-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-stone-800">Registrarse y Vender Producto</h3>
+                <button onclick="cerrarModalVenta()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            </div>
+            
+            <form id="formVenta" onsubmit="publicarProducto(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-stone-700">Tus Nombres y Apellidos</label>
+                    <input type="text" id="nombreVendedor" required class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-stone-700">Correo Electrónico</label>
+                        <input type="email" id="correoVendedor" required class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-stone-700">Teléfono (Contacto)</label>
+                        <input type="text" id="telefonoVendedor" required placeholder="+51 ..." class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-700">Categoría</label>
+                    <select id="categoriaProducto" class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                        <option value="Casas">Casas</option>
+                        <option value="Vehículos">Vehículos</option>
+                        <option value="Enceres">Enceres</option>
+                        <option value="Equipos Electrónicos">Equipos Electrónicos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-700">Título del Producto</label>
+                    <input type="text" id="tituloProducto" required placeholder="Ej. Reloj antiguo suizo de oro" class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-700">Descripción (Máximo 1000 caracteres)</label>
+                    <textarea id="descripcionProducto" maxlength="1000" rows="3" required placeholder="Detalles del estado, antigüedad, etc." class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-700">Precio en Soles (S/)</label>
+                    <input type="number" step="0.01" id="precioProducto" required placeholder="0.00" class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-stone-700">Enlaces de Fotos (Hasta 7 URLs separadas por coma)</label>
+                    <input type="text" id="fotosProducto" placeholder="https://imagen1.jpg, https://imagen2.jpg" class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
+                    <p class="text-xs text-gray-500 mt-1">Puedes pegar links de imágenes de internet (máx. 7 fotos).</p>
+                </div>
+                <button type="submit" class="w-full bg-amber-700 text-white py-4 rounded-xl font-bold hover:bg-amber-800 transition">Publicar Anuncio</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalVenta() {
+            document.getElementById('modalVenta').classList.remove('hidden');
+        }
+        function cerrarModalVenta() {
+            document.getElementById('modalVenta').classList.add('hidden');
+        }
+
+        async function cargarProductos(query = "", categoria = "") {
+            let url = '/api/productos?';
+            if(query) url += `q=${encodeURIComponent(query)}&`;
+            if(categoria && categoria !== 'Todos') url += `categoria=${encodeURIComponent(categoria)}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const grid = document.getElementById('gridProductos');
+                
+                if(data.length === 0) {
+                    grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-10">No se encontraron productos disponibles.</p>`;
+                    return;
+                }
+
+                grid.innerHTML = data.map(p => `
+                    <div class="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-lg transition">
+                        <img src="${p.fotos[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363'}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <span class="text-xs font-bold text-amber-700 uppercase bg-amber-50 px-3 py-1 rounded-full">${p.categoria}</span>
+                            <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
+                            <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
+                            <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
+                            <button onclick="alert('Para contactar a ${p.vendedor.nombre} y ver su teléfono, realiza el pago de comisión de S/ 2.00 a nuestra cuenta BCP.')" class="w-full mt-4 bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition">Contactar Vendedor</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Error al cargar productos", e);
+            }
+        }
+
+        function buscarProductos() {
+            const q = document.getElementById('inputBusqueda').value;
+            cargarProductos(q);
+        }
+
+        function filtrarCategoria(cat) {
+            cargarProductos("", cat);
+        }
+
+        async function publicarProducto(e) {
+            e.preventDefault();
+            const fotosInput = document.getElementById('fotosProducto').value;
+            const fotosArray = fotosInput ? fotosInput.split(',').map(f => f.trim()).slice(0, 7) : ['https://images.unsplash.com/photo-1544816155-12df9643f363'];
+
+            const nuevo = {
+                nombreVendedor: document.getElementById('nombreVendedor').value,
+                correoVendedor: document.getElementById('correoVendedor').value,
+                telefonoVendedor: document.getElementById('telefonoVendedor').value,
+                categoria: document.getElementById('categoriaProducto').value,
+                titulo: document.getElementById('tituloProducto').value,
+                descripcion: document.getElementById('descripcionProducto').value,
+                precio: document.getElementById('precioProducto').value,
+                fotos: fotosArray
+            };
+
+            const res = await fetch('/api/productos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevo)
+            });
+
+            const data = await res.json();
+            if(res.ok) {
+                alert(data.mensaje);
+                cerrarModalVenta();
+                document.getElementById('formVenta').reset();
+                cargarProductos();
+            } else {
+                alert(data.error || "Error al registrar el producto");
+            }
+        }
+
+        // Cargar productos al iniciar la página
+        cargarProductos();
+    </script>
 </body>
 </html>
