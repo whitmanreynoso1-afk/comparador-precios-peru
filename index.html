@@ -40,7 +40,7 @@
 
             try {
                 // Petición al servidor backend que conecta con la red
-                const respuesta = await fetch(`http://localhost:3000/api/buscar?q=${encodeURIComponent(query)}`);
+                const respuesta = await fetch('/api/buscar?q=' + encodeURIComponent(query))}`);
                 const productos = await respuesta.json();
 
                 loader.classList.add('hidden');
