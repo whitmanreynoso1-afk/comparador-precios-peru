@@ -134,7 +134,7 @@
                     <p class="text-xs font-bold text-purple-900 leading-relaxed">Enviar imagen de Yape con el código del producto al WhatsApp <span class="text-amber-700 text-sm">977399056</span></p>
                 </div>
 
-                <!-- Nuevo cuadro de aviso en lugar del botón -->
+                <!-- Cuadro de aviso informativo -->
                 <div class="bg-purple-700 text-white py-4 px-4 rounded-xl font-bold shadow-lg text-sm">
                     En unos segundos le llegará el número de contacto a su WhatsApp
                 </div>
@@ -189,14 +189,41 @@
                                     <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
                                 </div>
                             </div>
-                            <div class="p-6 pt-0">
-                                <button onclick="abrirModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md">Contactar Vendedor</button>
+                            <div class="p-6 pt-0 flex items-center justify-between gap-2">
+                                <button onclick="abrirModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md text-sm">Contactar Vendedor</button>
+                                <!-- Botón exclusivo de administración -->
+                                <button onclick="eliminarComoAdmin(${p.id})" title="Eliminar anuncio (Admin)" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-red-200">🗑️</button>
                             </div>
                         </div>
                     `;
                 }).join('');
             } catch (e) {
                 console.error("Error al cargar productos", e);
+            }
+        }
+
+        // Función de administrador para eliminar productos
+        async function eliminarComoAdmin(id) {
+            const clave = prompt("Ingrese la clave de administrador:");
+            if (clave !== "12345") { // Puedes cambiar "12345" por la contraseña que prefieras
+                alert("Clave de administrador incorrecta.");
+                return;
+            }
+
+            if (!confirm("¿Estás seguro de eliminar este producto del marketplace?")) return;
+
+            try {
+                const res = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje || "Producto eliminado exitosamente");
+                    cargarProductos();
+                } else {
+                    alert(data.error || "No se pudo eliminar el producto");
+                }
+            } catch (e) {
+                console.error("Error al eliminar", e);
+                alert("Error de conexión al eliminar el producto");
             }
         }
 
