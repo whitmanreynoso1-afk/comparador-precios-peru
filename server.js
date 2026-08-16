@@ -1,6 +1,14 @@
 const express = require('express');
 const app = express();
 
+// ESTA LÍNEA ES LA CLAVE PARA QUE ENCUENTRE EL INDEX.HTML:
+app.use(express.static(__dirname)); 
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ... (tus rutas de productos GET, POST, DELETE van aquí abajo) ...
+
 // 1. DECLARACIÓN GLOBAL: El arreglo donde se guardan los productos
 let productos = [
     {
