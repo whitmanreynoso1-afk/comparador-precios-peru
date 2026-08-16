@@ -79,7 +79,7 @@
                         <input type="email" id="correoVendedor" required class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-stone-700">Teléfono (Contacto)</label>
+                        <label class="block text-sm font-bold text-stone-700">Teléfono (Contacto privado para Yape)</label>
                         <input type="text" id="telefonoVendedor" required placeholder="+51 ..." class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
                     </div>
                 </div>
@@ -93,11 +93,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-stone-700">Título del Producto</label>
+                    <label class="block text-sm font-bold text-stone-700">Título del Producto <span class="text-xs text-red-500 font-normal">(Prohibido poner números/celulares)</span></label>
                     <input type="text" id="tituloProducto" required placeholder="Ej. Título de propiedad o artículo" class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-stone-700">Descripción (Máximo 1000 caracteres)</label>
+                    <label class="block text-sm font-bold text-stone-700">Descripción <span class="text-xs text-red-500 font-normal">(Prohibido poner números/celulares)</span></label>
                     <textarea id="descripcionProducto" maxlength="1000" rows="3" required placeholder="Detalles de la ubicación o estado..." class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700"></textarea>
                 </div>
                 <div>
@@ -105,7 +105,7 @@
                     <input type="number" step="0.01" id="precioProducto" required placeholder="0.00" class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-stone-700">Subir Fotos (Máximo 7 fotos desde tu PC o USB)</label>
+                    <label class="block text-sm font-bold text-stone-700">Subir Fotos <span class="text-xs text-red-500 font-normal">(Evitar imágenes con números de celular impresos)</span></label>
                     <input type="file" id="fotosProducto" accept="image/*" multiple class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700 bg-stone-50">
                 </div>
                 <button type="submit" class="w-full bg-amber-700 text-white py-4 rounded-xl font-bold hover:bg-amber-800 transition">Publicar Anuncio</button>
@@ -191,12 +191,14 @@
                                     </div>
                                     <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
                                     <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
-                                    <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
+                                    <!-- Únicamente se visualiza la descripción -->
+                                    <p class="text-sm text-stone-600 mt-2 line-clamp-3">${p.descripcion}</p>
                                 </div>
                             </div>
                             <div class="p-6 pt-0 flex items-center justify-between gap-2">
                                 <button onclick="abrirModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md text-sm">Contactar Vendedor</button>
                                 ${mostrarBotonAdmin ? `
+                                    <button onclick="verTelefonoAdmin('${p.telefonoVendedor}', '${p.nombreVendedor}')" title="Ver Teléfono" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-blue-200">📞</button>
                                     <button onclick="eliminarComoAdmin(${p.id})" title="Eliminar anuncio (Admin)" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-red-200">🗑️</button>
                                 ` : ''}
                             </div>
@@ -249,6 +251,21 @@
             }
         }
 
+        function verTelefonoAdmin(telefono, nombre) {
+            if (intentosFallidosAdmin >= MAX_INTENTOS) {
+                alert("Opción bloqueada por seguridad.");
+                return;
+            }
+            const clave = prompt("Ingrese la clave de administrador para ver el teléfono:");
+            if (clave !== "4767") {
+                intentosFallidosAdmin++;
+                alert("Clave incorrecta.");
+                return;
+            }
+            intentosFallidosAdmin = 0;
+            alert(`Vendedor: ${nombre}\nTeléfono: ${telefono}`);
+        }
+
         function buscarProductos() {
             const q = document.getElementById('inputBusqueda').value;
             cargarProductos(q);
@@ -271,10 +288,49 @@
             );
         }
 
+        // Función para detectar números de teléfono (ej. secuencias de 7 o más dígitos, o prefijos con 9)
+        function contieneNumeroCelular(texto) {
+            // Remueve espacios y guiones para analizar mejor las cadenas numéricas
+            const textoLimpio = texto.replace(/[\s\-\(\)\+]/g, '');
+            // Patrón para detectar secuencias de números que parezcan teléfonos (ej. de 7 a 12 dígitos o que empiecen con 9)
+            const regexCelular = /(9\d{8}|\d{7,12})/;
+            return regexCelular.test(textoLimpio);
+        }
+
         async function publicarProducto(e) {
             e.preventDefault();
+
+            const titulo = document.getElementById('tituloProducto').value;
+            const descripcion = document.getElementById('descripcionProducto').value;
+            const precio = document.getElementById('precioProducto').value;
+
+            // 1. Validar Título
+            if (contieneNumeroCelular(titulo)) {
+                alert("🚫 Anuncio rechazado: Está prohibido incluir números de teléfono o celular en el TÍTULO. Por favor, elimínelo.");
+                return;
+            }
+
+            // 2. Validar Descripción
+            if (contieneNumeroCelular(descripcion)) {
+                alert("🚫 Anuncio rechazado: Está prohibido incluir números de teléfono o celular en la DESCRIPCIÓN. Los compradores deben contactarse a través de la plataforma.");
+                return;
+            }
+
+            // 3. Validar Precio (por si intentan poner un número de celular ahí)
+            if (contieneNumeroCelular(precio)) {
+                alert("🚫 Anuncio rechazado: El formato del PRECIO no es válido o contiene un número de celular.");
+                return;
+            }
+
             const inputFiles = document.getElementById('fotosProducto').files;
             
+            // Aviso preventivo sobre imágenes
+            if (inputFiles.length > 0) {
+                // Validación básica orientativa para advertir al usuario sobre texto en imágenes
+                // (Nota: el navegador por seguridad web no puede leer texto OCR dentro de imágenes automáticamente sin una API externa,
+                // pero se le advierte y se previene al usuario de forma estricta).
+            }
+
             let fotosArray = ['https://images.unsplash.com/photo-1544816155-12df9643f363'];
             if (inputFiles.length > 0) {
                 try {
@@ -289,9 +345,9 @@
                 correoVendedor: document.getElementById('correoVendedor').value,
                 telefonoVendedor: document.getElementById('telefonoVendedor').value,
                 categoria: document.getElementById('categoriaProducto').value,
-                titulo: document.getElementById('tituloProducto').value,
-                descripcion: document.getElementById('descripcionProducto').value,
-                precio: document.getElementById('precioProducto').value,
+                titulo: titulo,
+                descripcion: descripcion,
+                precio: parseFloat(precio),
                 fotos: fotosArray
             };
 
@@ -303,7 +359,7 @@
 
             const data = await res.json();
             if(res.ok) {
-                alert(data.mensaje);
+                alert(data.mensaje + "\n\n⚠️ RECUERDE: Las imágenes subidas tampoco deben contener números de celular impresos o escritos, de lo contrario el anuncio será dado de baja por los administradores.");
                 cerrarModalVenta();
                 document.getElementById('formVenta').reset();
                 cargarProductos();
