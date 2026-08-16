@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>USADOS - Marketplace de Antigüedades y Tesoros</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USADOS PE - Marketplace de Antigüedades, Casas y Vehículos</title>
+    <meta name="description" content="Encuentra y publica piezas con historia, casas, vehículos, enceres y equipos electrónicos de forma segura en USADOS PE.">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hero-bg {
@@ -18,7 +20,7 @@
     <!-- Header -->
     <header class="bg-white shadow-sm p-4 sticky top-0 z-40">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-4xl font-black text-stone-800 tracking-tighter">USADOS<span class="text-amber-700">.pe</span></h1>
+            <h1 class="text-4xl font-black text-stone-800 tracking-tighter">USADOS<span class="text-amber-700"> PE</span></h1>
             <button onclick="abrirModalVenta()" class="bg-amber-700 hover:bg-amber-800 text-white px-6 py-2 rounded-full font-bold transition shadow-md">Vender Objeto</button>
         </div>
     </header>
@@ -223,7 +225,7 @@
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-admin-clave': clave // Enviado de forma segura al backend
+                        'x-admin-clave': clave
                     }
                 });
                 const data = await res.json();

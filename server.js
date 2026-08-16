@@ -35,7 +35,6 @@ app.get('/api/productos', (req, res) => {
         resultados = resultados.filter(p => p.titulo.toLowerCase().includes(query) || p.descripcion.toLowerCase().includes(query));
     }
 
-    // Excluimos el teléfono de la respuesta pública para protegerlo ante inspección de red
     const productosPublicos = resultados.map(p => ({
         id: p.id,
         categoria: p.categoria,
@@ -66,7 +65,7 @@ app.post('/api/productos', (req, res) => {
     res.json({ mensaje: "¡Producto publicado exitosamente!" });
 });
 
-// 3. RUTA SEGURA PARA VER EL TELÉFONO (Validación interna en el servidor)
+// 3. RUTA SEGURA PARA VER EL TELÉFONO (Validación interna en el servidor con clave 4767)
 app.post('/api/admin/ver-telefono', (req, res) => {
     const { id, clave } = req.body;
     
