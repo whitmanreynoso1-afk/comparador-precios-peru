@@ -124,17 +124,14 @@
                 <h3 class="text-2xl font-bold text-stone-800 mt-2">Escanea tu Yape</h3>
                 <p class="text-sm text-stone-600 mt-1">Escanea el código QR con tu aplicación Yape y realiza el pago.</p>
                 
-                <!-- Imagen QR Real -->
                 <div class="my-4 inline-block p-2 bg-purple-700 rounded-2xl shadow-md">
                     <img src="qr-yape.png" alt="QR Yape" class="w-48 h-48 object-contain rounded-xl mx-auto bg-white">
                 </div>
                 
-                <!-- Indicación de envío de imagen con el código -->
                 <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl mb-4">
                     <p class="text-xs font-bold text-purple-900 leading-relaxed">Enviar imagen de Yape con el código del producto al WhatsApp <span class="text-amber-700 text-sm">977399056</span></p>
                 </div>
 
-                <!-- Cuadro de aviso informativo -->
                 <div class="bg-purple-700 text-white py-4 px-4 rounded-xl font-bold shadow-lg text-sm">
                     En unos segundos le llegará el número de contacto a su WhatsApp
                 </div>
@@ -191,14 +188,13 @@
                                     </div>
                                     <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
                                     <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
-                                    <!-- Únicamente se visualiza la descripción -->
                                     <p class="text-sm text-stone-600 mt-2 line-clamp-3">${p.descripcion}</p>
                                 </div>
                             </div>
                             <div class="p-6 pt-0 flex items-center justify-between gap-2">
                                 <button onclick="abrirModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md text-sm">Contactar Vendedor</button>
                                 ${mostrarBotonAdmin ? `
-                                    <button onclick="verTelefonoAdmin('${p.telefonoVendedor}', '${p.nombreVendedor}')" title="Ver Teléfono" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-blue-200">📞</button>
+                                    <button onclick="verTelefonoAdmin(${p.id})" title="Ver Teléfono" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-blue-200">📞</button>
                                     <button onclick="eliminarComoAdmin(${p.id})" title="Eliminar anuncio (Admin)" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-red-200">🗑️</button>
                                 ` : ''}
                             </div>
@@ -218,32 +214,33 @@
             }
 
             const clave = prompt("Ingrese la clave de administrador:");
-            
-            if (clave !== "4767") {
-                intentosFallidosAdmin++;
-                const intentosRestantes = MAX_INTENTOS - intentosFallidosAdmin;
-                
-                if (intentosFallidosAdmin >= MAX_INTENTOS) {
-                    alert("Clave incorrecta. Has agotado los 3 intentos. La opción de eliminación ha sido retirada de la vista.");
-                    cargarProductos();
-                } else {
-                    alert(`Clave incorrecta. Te quedan ${intentosRestantes} intento(s).`);
-                }
-                return;
-            }
-
-            intentosFallidosAdmin = 0;
+            if (!clave) return;
 
             if (!confirm("¿Estás seguro de eliminar este producto del marketplace?")) return;
 
             try {
-                const res = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/productos/${id}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-clave': clave // Enviado de forma segura al backend
+                    }
+                });
                 const data = await res.json();
+                
                 if (res.ok) {
+                    intentosFallidosAdmin = 0;
                     alert(data.mensaje || "Producto eliminado exitosamente");
                     cargarProductos();
                 } else {
-                    alert(data.error || "No se pudo eliminar el producto");
+                    intentosFallidosAdmin++;
+                    const intentosRestantes = MAX_INTENTOS - intentosFallidosAdmin;
+                    if (intentosFallidosAdmin >= MAX_INTENTOS) {
+                        alert("Clave incorrecta. Has agotado los 3 intentos. La opción ha sido retirada.");
+                        cargarProductos();
+                    } else {
+                        alert(`Clave incorrecta. Te quedan ${intentosRestantes} intento(s).`);
+                    }
                 }
             } catch (e) {
                 console.error("Error al eliminar", e);
@@ -251,19 +248,39 @@
             }
         }
 
-        function verTelefonoAdmin(telefono, nombre) {
+        async function verTelefonoAdmin(id) {
             if (intentosFallidosAdmin >= MAX_INTENTOS) {
                 alert("Opción bloqueada por seguridad.");
                 return;
             }
             const clave = prompt("Ingrese la clave de administrador para ver el teléfono:");
-            if (clave !== "4767") {
-                intentosFallidosAdmin++;
-                alert("Clave incorrecta.");
-                return;
+            if (!clave) return;
+
+            try {
+                const res = await fetch('/api/admin/ver-telefono', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, clave })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    intentosFallidosAdmin = 0;
+                    alert(`Vendedor: ${data.nombre}\nTeléfono: ${data.telefono}`);
+                } else {
+                    intentosFallidosAdmin++;
+                    const intentosRestantes = MAX_INTENTOS - intentosFallidosAdmin;
+                    if (intentosFallidosAdmin >= MAX_INTENTOS) {
+                        alert("Clave incorrecta. Has agotado los 3 intentos.");
+                        cargarProductos();
+                    } else {
+                        alert(`Clave incorrecta. Te quedan ${intentosRestantes} intento(s).`);
+                    }
+                }
+            } catch (e) {
+                console.error("Error al obtener teléfono", e);
+                alert("Error de conexión");
             }
-            intentosFallidosAdmin = 0;
-            alert(`Vendedor: ${nombre}\nTeléfono: ${telefono}`);
         }
 
         function buscarProductos() {
@@ -288,11 +305,8 @@
             );
         }
 
-        // Función para detectar números de teléfono (ej. secuencias de 7 o más dígitos, o prefijos con 9)
         function contieneNumeroCelular(texto) {
-            // Remueve espacios y guiones para analizar mejor las cadenas numéricas
             const textoLimpio = texto.replace(/[\s\-\(\)\+]/g, '');
-            // Patrón para detectar secuencias de números que parezcan teléfonos (ej. de 7 a 12 dígitos o que empiecen con 9)
             const regexCelular = /(9\d{8}|\d{7,12})/;
             return regexCelular.test(textoLimpio);
         }
@@ -304,33 +318,22 @@
             const descripcion = document.getElementById('descripcionProducto').value;
             const precio = document.getElementById('precioProducto').value;
 
-            // 1. Validar Título
             if (contieneNumeroCelular(titulo)) {
-                alert("🚫 Anuncio rechazado: Está prohibido incluir números de teléfono o celular en el TÍTULO. Por favor, elimínelo.");
+                alert("🚫 Anuncio rechazado: Está prohibido incluir números de teléfono o celular en el TÍTULO.");
                 return;
             }
 
-            // 2. Validar Descripción
             if (contieneNumeroCelular(descripcion)) {
-                alert("🚫 Anuncio rechazado: Está prohibido incluir números de teléfono o celular en la DESCRIPCIÓN. Los compradores deben contactarse a través de la plataforma.");
+                alert("🚫 Anuncio rechazado: Está prohibido incluir números de teléfono o celular en la DESCRIPCIÓN.");
                 return;
             }
 
-            // 3. Validar Precio (por si intentan poner un número de celular ahí)
             if (contieneNumeroCelular(precio)) {
                 alert("🚫 Anuncio rechazado: El formato del PRECIO no es válido o contiene un número de celular.");
                 return;
             }
 
             const inputFiles = document.getElementById('fotosProducto').files;
-            
-            // Aviso preventivo sobre imágenes
-            if (inputFiles.length > 0) {
-                // Validación básica orientativa para advertir al usuario sobre texto en imágenes
-                // (Nota: el navegador por seguridad web no puede leer texto OCR dentro de imágenes automáticamente sin una API externa,
-                // pero se le advierte y se previene al usuario de forma estricta).
-            }
-
             let fotosArray = ['https://images.unsplash.com/photo-1544816155-12df9643f363'];
             if (inputFiles.length > 0) {
                 try {
@@ -359,7 +362,7 @@
 
             const data = await res.json();
             if(res.ok) {
-                alert(data.mensaje + "\n\n⚠️ RECUERDE: Las imágenes subidas tampoco deben contener números de celular impresos o escritos, de lo contrario el anuncio será dado de baja por los administradores.");
+                alert(data.mensaje + "\n\n⚠️ RECUERDE: Las imágenes subidas tampoco deben contener números de celular impresos.");
                 cerrarModalVenta();
                 document.getElementById('formVenta').reset();
                 cargarProductos();

@@ -1,15 +1,12 @@
 const express = require('express');
 const app = express();
 
-// ESTA LÍNEA ES LA CLAVE PARA QUE ENCUENTRE EL INDEX.HTML:
+// Configuración de middlewares y archivos estáticos
 app.use(express.static(__dirname)); 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ... (tus rutas de productos GET, POST, DELETE van aquí abajo) ...
-
-// 1. DECLARACIÓN GLOBAL: El arreglo donde se guardan los productos
+// Declaración global del arreglo de productos
 let productos = [
     {
         id: 1,
@@ -17,25 +14,41 @@ let productos = [
         titulo: "Nissan Frontier de muestra",
         descripcion: "Vehículo en buen estado general.",
         precio: 15000.00,
+        nombreVendedor: "Administrador",
+        correoVendedor: "admin@usados.pe",
+        telefonoVendedor: "977399056",
         fotos: ["https://images.unsplash.com/photo-1544816155-12df9643f363"]
     }
 ];
 
-// Configuración de middlewares esenciales
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// (Opcional si tu HTML está en la misma carpeta del servidor)
-app.use(express.static('public')); 
-
-
-// 2. RUTA PARA OBTENER LOS PRODUCTOS (GET)
+// 1. RUTA PARA OBTENER LOS PRODUCTOS (GET) - Oculta teléfonos públicos por seguridad
 app.get('/api/productos', (req, res) => {
-    res.json(productos);
+    const { q, categoria } = req.query;
+    let resultados = productos;
+
+    if (categoria && categoria !== 'Todos') {
+        resultados = resultados.filter(p => p.categoria.toLowerCase() === categoria.toLowerCase());
+    }
+
+    if (q) {
+        const query = q.toLowerCase();
+        resultados = resultados.filter(p => p.titulo.toLowerCase().includes(query) || p.descripcion.toLowerCase().includes(query));
+    }
+
+    // Excluimos el teléfono de la respuesta pública para protegerlo ante inspección de red
+    const productosPublicos = resultados.map(p => ({
+        id: p.id,
+        categoria: p.categoria,
+        titulo: p.titulo,
+        descripcion: p.descripcion,
+        precio: p.precio,
+        fotos: p.fotos
+    }));
+
+    res.json(productosPublicos);
 });
 
-
-// 3. RUTA PARA CREAR/PUBLICAR UN PRODUCTO (POST)
+// 2. RUTA PARA CREAR/PUBLICAR UN PRODUCTO (POST)
 app.post('/api/productos', (req, res) => {
     const nuevoProducto = {
         id: productos.length > 0 ? productos[productos.length - 1].id + 1 : 1,
@@ -43,6 +56,9 @@ app.post('/api/productos', (req, res) => {
         titulo: req.body.titulo,
         descripcion: req.body.descripcion,
         precio: parseFloat(req.body.precio) || 0,
+        nombreVendedor: req.body.nombreVendedor,
+        correoVendedor: req.body.correoVendedor,
+        telefonoVendedor: req.body.telefonoVendedor,
         fotos: req.body.fotos || []
     };
     
@@ -50,20 +66,40 @@ app.post('/api/productos', (req, res) => {
     res.json({ mensaje: "¡Producto publicado exitosamente!" });
 });
 
+// 3. RUTA SEGURA PARA VER EL TELÉFONO (Validación interna en el servidor)
+app.post('/api/admin/ver-telefono', (req, res) => {
+    const { id, clave } = req.body;
+    
+    if (clave !== "4767") {
+        return res.status(401).json({ error: "Clave incorrecta" });
+    }
 
-// 4. RUTA PARA ELIMINAR EL PRODUCTO (DELETE)
+    const producto = productos.find(p => p.id === parseInt(id));
+    if (!producto) {
+        return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    res.json({ telefono: producto.telefonoVendedor, nombre: producto.nombreVendedor });
+});
+
+// 4. RUTA SEGURA PARA ELIMINAR EL PRODUCTO (Validación de clave en la cabecera)
 app.delete('/api/productos/:id', (req, res) => {
     const idProducto = parseInt(req.params.id);
+    const claveAdmin = req.headers['x-admin-clave'];
+
+    if (claveAdmin !== "4767") {
+        return res.status(401).json({ error: "Clave de administrador incorrecta" });
+    }
+
     const index = productos.findIndex(p => p.id === idProducto);
     
     if (index !== -1) {
-        productos.splice(index, 1); // Lo borra del arreglo global
+        productos.splice(index, 1);
         return res.json({ mensaje: "Producto eliminado exitosamente" });
     } else {
         return res.status(404).json({ error: "No se encontró el producto" });
     }
 });
-
 
 // Puerto de escucha en Render
 const PORT = process.env.PORT || 3000;
