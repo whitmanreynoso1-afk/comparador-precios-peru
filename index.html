@@ -98,7 +98,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-stone-700">Descripción (Máximo 1000 caracteres)</label>
-                    <textarea id="descripcionProducto" maxlength="1000" rows="3" required placeholder="Detalles de la ubicación o estado del producto..." class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700"></textarea>
+                    <textarea id="descripcionProducto" maxlength="1000" rows="3" required placeholder="Detalles de la ubicación o estado..." class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700"></textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-stone-700">Precio en Soles (S/)</label>
@@ -107,19 +107,93 @@
                 <div>
                     <label class="block text-sm font-bold text-stone-700">Subir Fotos (Máximo 7 fotos desde tu PC o USB)</label>
                     <input type="file" id="fotosProducto" accept="image/*" multiple class="w-full border p-3 rounded-xl mt-1 outline-none focus:border-amber-700 bg-stone-50">
-                    <p class="text-xs text-gray-500 mt-1">Selecciona hasta 7 imágenes presionando Ctrl al elegirlas.</p>
                 </div>
                 <button type="submit" class="w-full bg-amber-700 text-white py-4 rounded-xl font-bold hover:bg-amber-800 transition">Publicar Anuncio</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal de Contacto y Pago Yape -->
+    <div id="modalContacto" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl my-8 text-center">
+            <div class="flex justify-end">
+                <button onclick="cerrarModalContacto()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            </div>
+            <div id="contenidoPago">
+                <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Comisión de Contacto</span>
+                <h3 class="text-2xl font-bold text-stone-800 mt-2">Paga S/ 2.00 con YAPE</h3>
+                <p class="text-sm text-stone-600 mt-2">Escanea el QR o yapea al número indicado y digita tu código de operación para ver el teléfono del vendedor.</p>
+                
+                <!-- Simulación de Código QR de Yape -->
+                <div class="my-6 bg-purple-50 p-4 rounded-2xl border border-purple-200 inline-block">
+                    <div class="bg-purple-700 text-white font-black text-xl py-3 px-6 rounded-xl mb-2 tracking-widest">YAPE</div>
+                    <p class="text-xs font-bold text-purple-900">Nro: 999 999 999</p>
+                    <p class="text-xs text-stone-500">Titular: USADOS.PE</p>
+                </div>
+
+                <div class="text-left space-y-3">
+                    <label class="block text-sm font-bold text-stone-700">N° de Operación Yape / Voucher</label>
+                    <input type="text" id="nroOperacion" placeholder="Ej. 12345678" class="w-full border p-3 rounded-xl outline-none focus:border-purple-600 text-center text-lg font-bold">
+                    <button onclick="verificarPagoYape()" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-xl font-bold transition">Verificar Pago y Ver Teléfono</button>
+                </div>
+            </div>
+
+            <!-- Resultado Exitoso (Teléfono Revelado) -->
+            <div id="contenidoExito" class="hidden">
+                <div class="text-5xl mb-3">✅</div>
+                <h3 class="text-2xl font-bold text-stone-800">¡Pago Verificado con Éxito!</h3>
+                <p class="text-sm text-stone-600 mt-2">Ya puedes comunicarte directamente con el vendedor:</p>
+                
+                <div class="my-6 bg-stone-100 p-4 rounded-2xl border border-stone-200">
+                    <p id="infoVendedorNombre" class="font-bold text-stone-800 text-lg"></p>
+                    <p id="infoVendedorTel" class="text-amber-700 font-black text-2xl mt-1"></p>
+                </div>
+
+                <button onclick="cerrarModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition">Entendido</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let telefonoActualGlobal = "";
+        let nombreActualGlobal = "";
+
         function abrirModalVenta() {
             document.getElementById('modalVenta').classList.remove('hidden');
         }
         function cerrarModalVenta() {
             document.getElementById('modalVenta').classList.add('hidden');
+        }
+
+        function abrirModalContacto(nombre, telefono) {
+            nombreActualGlobal = nombre;
+            telefonoActualGlobal = telefono;
+            
+            // Resetear estados del modal
+            document.getElementById('nroOperacion').value = '';
+            document.getElementById('contenidoPago').classList.remove('hidden');
+            document.getElementById('contenidoExito').classList.add('hidden');
+            
+            document.getElementById('modalContacto').classList.remove('hidden');
+        }
+
+        function cerrarModalContacto() {
+            document.getElementById('modalContacto').classList.add('hidden');
+        }
+
+        function verificarPagoYape() {
+            const op = document.getElementById('nroOperacion').value.trim();
+            if(!op || op.length < 4) {
+                alert("Por favor ingresa un número de operación Yape válido.");
+                return;
+            }
+
+            // Simulación de verificación instantánea y exitosa
+            document.getElementById('contenidoPago').classList.add('hidden');
+            document.getElementById('contenidoExito').classList.remove('hidden');
+
+            document.getElementById('infoVendedorNombre').innerText = nombreActualGlobal;
+            document.getElementById('infoVendedorTel').innerText = "📞 " + telefonoActualGlobal;
         }
 
         async function cargarProductos(query = "", categoria = "") {
@@ -138,14 +212,18 @@
                 }
 
                 grid.innerHTML = data.map(p => `
-                    <div class="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-lg transition">
-                        <img src="${p.fotos[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363'}" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <span class="text-xs font-bold text-amber-700 uppercase bg-amber-50 px-3 py-1 rounded-full">${p.categoria}</span>
-                            <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
-                            <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
-                            <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
-                            <button onclick="alert('Para contactar a ${p.vendedor.nombre} y ver su teléfono, realiza el pago de comisión de S/ 2.00 a nuestra cuenta BCP.')" class="w-full mt-4 bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition">Contactar Vendedor</button>
+                    <div class="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
+                        <div>
+                            <img src="${p.fotos[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363'}" class="w-full h-48 object-cover">
+                            <div class="p-6">
+                                <span class="text-xs font-bold text-amber-700 uppercase bg-amber-50 px-3 py-1 rounded-full">${p.categoria}</span>
+                                <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
+                                <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
+                                <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button onclick="abrirModalContacto('${p.vendedor.nombre}', '${p.vendedor.telefono}')" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md">Contactar Vendedor</button>
                         </div>
                     </div>
                 `).join('');
@@ -163,7 +241,6 @@
             cargarProductos("", cat);
         }
 
-        // Función para convertir archivos locales a formato legible (Base64)
         function convertirArchivosABase64(files) {
             return Promise.all(
                 Array.from(files).slice(0, 7).map(file => {
