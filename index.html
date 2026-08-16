@@ -143,6 +143,10 @@
     </div>
 
     <script>
+        // Control de intentos fallidos de administración
+        let intentosFallidosAdmin = 0;
+        const MAX_INTENTOS = 3;
+
         function abrirModalVenta() {
             document.getElementById('modalVenta').classList.remove('hidden');
         }
@@ -173,6 +177,9 @@
                     return;
                 }
 
+                // Verificar si se superaron los 3 intentos para ocultar el botón de eliminar globalmente
+                const mostrarBotonAdmin = intentosFallidosAdmin < MAX_INTENTOS;
+
                 grid.innerHTML = data.map(p => {
                     const codigoProducto = `USADO-${1000 + p.id}`;
                     return `
@@ -191,8 +198,10 @@
                             </div>
                             <div class="p-6 pt-0 flex items-center justify-between gap-2">
                                 <button onclick="abrirModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md text-sm">Contactar Vendedor</button>
-                                <!-- Botón exclusivo de administración -->
-                                <button onclick="eliminarComoAdmin(${p.id})" title="Eliminar anuncio (Admin)" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-red-200">🗑️</button>
+                                ${mostrarBotonAdmin ? `
+                                    <!-- Botón exclusivo de administración -->
+                                    <button onclick="eliminarComoAdmin(${p.id})" title="Eliminar anuncio (Admin)" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-3 rounded-xl font-bold transition text-xs border border-red-200">🗑️</button>
+                                ` : ''}
                             </div>
                         </div>
                     `;
@@ -202,13 +211,31 @@
             }
         }
 
-        // Función de administrador para eliminar productos
+        // Función de administrador con clave 4767 y límite de 3 intentos
         async function eliminarComoAdmin(id) {
-            const clave = prompt("Ingrese la clave de administrador:");
-            if (clave !== "12345") { // Puedes cambiar "12345" por la contraseña que prefieras
-                alert("Clave de administrador incorrecta.");
+            if (intentosFallidosAdmin >= MAX_INTENTOS) {
+                alert("Demasiados intentos fallidos. La opción ha sido bloqueada.");
+                cargarProductos(); // Refresca para asegurar que desaparezca
                 return;
             }
+
+            const clave = prompt("Ingrese la clave de administrador:");
+            
+            if (clave !== "4767") {
+                intentosFallidosAdmin++;
+                const intentosRestantes = MAX_INTENTOS - intentosFallidosAdmin;
+                
+                if (intentosFallidosAdmin >= MAX_INTENTOS) {
+                    alert("Clave incorrecta. Has agotado los 3 intentos. La opción de eliminación ha sido retirada de la vista.");
+                    cargarProductos(); // Oculta los botones inmediatamente
+                } else {
+                    alert(`Clave incorrecta. Te quedan ${intentosRestantes} intento(s).`);
+                }
+                return;
+            }
+
+            // Si la clave es correcta, se reinician los intentos por seguridad
+            intentosFallidosAdmin = 0;
 
             if (!confirm("¿Estás seguro de eliminar este producto del marketplace?")) return;
 
