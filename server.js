@@ -1,35 +1,73 @@
 const express = require('express');
-const cors = require('cors');
-const path = require('path'); // <-- Importante: módulo para rutas
+const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000; // <-- Importante: usar el puerto que asigna Render
 
-app.use(cors());
-app.use(express.json());
+// Aumentar el límite de tamaño para permitir subir fotos desde la PC
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// <-- ESTO ES LO QUE FALTABA: Decirle al servidor que muestre tu index.html
-app.use(express.static(path.join(__dirname)));
-
-// Base de datos de ejemplo para la búsqueda
-const inventarioGlobalInternet = [
-    { nombre: "Apple iPhone 15 128GB Negro", tiendas: [{ nombre: "AliExpress", precio: 3299.00 }, { nombre: "Mercado Libre", precio: 3699.00 }, { nombre: "Falabella", precio: 3899.00 }] },
-    { nombre: "Zapatillas Nike Air Max Excee", tiendas: [{ nombre: "Pandabuy", precio: 180.00 }, { nombre: "Mercado Libre", precio: 289.00 }, { nombre: "Oechsle", precio: 319.00 }] },
-    { nombre: "Laptop Lenovo IdeaPad 3 Ryzen 5", tiendas: [{ nombre: "Importadora China", precio: 1850.00 }, { nombre: "Ripley", precio: 2199.00 }, { nombre: "Coolbox", precio: 2299.00 }] },
-    { nombre: "Xiaomi Redmi Note 13 Pro", tiendas: [{ nombre: "AliExpress", precio: 890.00 }, { nombre: "Mercado Libre", precio: 1150.00 }] }
+// Base de datos temporal en memoria (se guardarán los anuncios mientras el servidor esté activo)
+let productosDB = [
+    {
+        id: 1,
+        vendedor: { nombre: "Administrador", correo: "admin@usados.pe", telefono: "999999999" },
+        categoria: "Vehículos",
+        titulo: "Nissan Frontier de muestra",
+        descripcion: "Vehículo en buen estado general.",
+        precio: 15000,
+        fotos: ["https://images.unsplash.com/photo-1544816155-12df9643f363"]
+    }
 ];
 
-// Endpoint que procesa la búsqueda en vivo
-app.get('/api/buscar', (req, res) => {
-    const query = req.query.q ? req.query.q.toLowerCase().trim() : "";
-    if (!query) {
-        return res.json(inventarioGlobalInternet);
+// Ruta para obtener los productos
+app.get('/api/productos', (req, res) => {
+    let { q, categoria } = req.query;
+    let resultados = productosDB;
+
+    if (q) {
+        resultados = resultados.filter(p => 
+            p.titulo.toLowerCase().includes(q.toLowerCase()) || 
+            p.descripcion.toLowerCase().includes(q.toLowerCase())
+        );
     }
-    const resultados = inventarioGlobalInternet.filter(item => 
-        item.nombre.toLowerCase().includes(query)
-    );
+
+    if (categoria && categoria !== 'Todos') {
+        resultados = resultados.filter(p => p.categoria === categoria);
+    }
+
     res.json(resultados);
 });
 
+// Ruta para publicar un nuevo producto
+app.post('/api/productos', (req, res) => {
+    try {
+        const { nombreVendedor, correoVendedor, telefonoVendedor, categoria, titulo, descripcion, precio, fotos } = req.body;
+
+        const nuevoProducto = {
+            id: productosDB.length + 1,
+            vendedor: {
+                nombre: nombreVendedor,
+                correo: correoVendedor,
+                telefono: telefonoVendedor
+            },
+            categoria,
+            titulo,
+            descripcion,
+            precio: parseFloat(precio) || 0,
+            fotos: fotos && fotos.length > 0 ? fotos : ["https://images.unsplash.com/photo-1544816155-12df9643f363"]
+        };
+
+        productosDB.unshift(nuevoProducto); // Agregar al inicio
+        res.status(201).json({ mensaje: "¡Anuncio publicado con éxito!" });
+    } catch (error) {
+        res.status(500).json({ error: "Hubo un error al procesar el servidor." });
+    }
+});
+
+// Servir la página principal
+app.use(express.static(path.join(__dirname)));
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
