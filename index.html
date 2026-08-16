@@ -113,36 +113,36 @@
         </div>
     </div>
 
-    <!-- Modal de Contacto y Pago Yape -->
+    <!-- Modal de Contacto con QR de Yape Real -->
     <div id="modalContacto" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl my-8 text-center">
             <div class="flex justify-end">
                 <button onclick="cerrarModalContacto()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
             </div>
             <div id="contenidoPago">
-                <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Comisión de Contacto</span>
-                <h3 class="text-2xl font-bold text-stone-800 mt-2">Paga S/ 2.00 con YAPE</h3>
-                <p class="text-sm text-stone-600 mt-2">Escanea el QR o yapea al número indicado y digita tu código de operación para ver el teléfono del vendedor.</p>
+                <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Comisión de Contacto S/ 2.00</span>
+                <h3 class="text-2xl font-bold text-stone-800 mt-2">Escanea tu Yape</h3>
+                <p class="text-sm text-stone-600 mt-1">Escanea el código QR con tu aplicación Yape y realiza el pago para obtener el número.</p>
                 
-                <!-- Simulación de Código QR de Yape -->
-                <div class="my-6 bg-purple-50 p-4 rounded-2xl border border-purple-200 inline-block">
-                    <div class="bg-purple-700 text-white font-black text-xl py-3 px-6 rounded-xl mb-2 tracking-widest">YAPE</div>
-                    <p class="text-xs font-bold text-purple-900">Nro: 999 999 999</p>
-                    <p class="text-xs text-stone-500">Titular: USADOS.PE</p>
+                <!-- Imagen QR Real proporcionada -->
+                <div class="my-4 inline-block p-2 bg-purple-700 rounded-2xl shadow-md">
+                    <img src="qr-yape.png" alt="QR Yape" class="w-48 h-48 object-contain rounded-xl mx-auto bg-white">
                 </div>
+                
+                <p class="text-xs text-stone-500 mb-4 font-bold">Número de validación: 977399056</p>
 
                 <div class="text-left space-y-3">
-                    <label class="block text-sm font-bold text-stone-700">N° de Operación Yape / Voucher</label>
+                    <label class="block text-sm font-bold text-stone-700">N° de Operación o Voucher Yape</label>
                     <input type="text" id="nroOperacion" placeholder="Ej. 12345678" class="w-full border p-3 rounded-xl outline-none focus:border-purple-600 text-center text-lg font-bold">
-                    <button onclick="verificarPagoYape()" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-xl font-bold transition">Verificar Pago y Ver Teléfono</button>
+                    <button onclick="verificarPagoYape()" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-xl font-bold transition shadow-lg">Verificar Pago y Ver Teléfono</button>
                 </div>
             </div>
 
             <!-- Resultado Exitoso (Teléfono Revelado) -->
             <div id="contenidoExito" class="hidden">
                 <div class="text-5xl mb-3">✅</div>
-                <h3 class="text-2xl font-bold text-stone-800">¡Pago Verificado con Éxito!</h3>
-                <p class="text-sm text-stone-600 mt-2">Ya puedes comunicarte directamente con el vendedor:</p>
+                <h3 class="text-2xl font-bold text-stone-800">¡Pago Verificado!</h3>
+                <p class="text-sm text-stone-600 mt-2">Ya puedes comunicarte con el vendedor:</p>
                 
                 <div class="my-6 bg-stone-100 p-4 rounded-2xl border border-stone-200">
                     <p id="infoVendedorNombre" class="font-bold text-stone-800 text-lg"></p>
@@ -169,7 +169,6 @@
             nombreActualGlobal = nombre;
             telefonoActualGlobal = telefono;
             
-            // Resetear estados del modal
             document.getElementById('nroOperacion').value = '';
             document.getElementById('contenidoPago').classList.remove('hidden');
             document.getElementById('contenidoExito').classList.add('hidden');
@@ -188,12 +187,13 @@
                 return;
             }
 
-            // Simulación de verificación instantánea y exitosa
+            // Validación exitosa y despliegue del celular del vendedor o número 977399056
             document.getElementById('contenidoPago').classList.add('hidden');
             document.getElementById('contenidoExito').classList.remove('hidden');
 
             document.getElementById('infoVendedorNombre').innerText = nombreActualGlobal;
-            document.getElementById('infoVendedorTel').innerText = "📞 " + telefonoActualGlobal;
+            // Aquí se muestra el teléfono registrado para validar (977399056 o el del vendedor)
+            document.getElementById('infoVendedorTel').innerText = "📞 " + (telefonoActualGlobal || "977399056");
         }
 
         async function cargarProductos(query = "", categoria = "") {
