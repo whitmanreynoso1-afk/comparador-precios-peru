@@ -122,27 +122,26 @@
             <div id="contenidoPago">
                 <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Comisión de Contacto S/ 2.00</span>
                 <h3 class="text-2xl font-bold text-stone-800 mt-2">Escanea tu Yape</h3>
-                <p class="text-sm text-stone-600 mt-1">Escanea el código QR con tu aplicación Yape y realiza el pago para obtener el número.</p>
+                <p class="text-sm text-stone-600 mt-1">Escanea el código QR con tu aplicación Yape y realiza el pago.</p>
                 
-                <!-- Imagen QR Real proporcionada -->
+                <!-- Imagen QR Real -->
                 <div class="my-4 inline-block p-2 bg-purple-700 rounded-2xl shadow-md">
                     <img src="qr-yape.png" alt="QR Yape" class="w-48 h-48 object-contain rounded-xl mx-auto bg-white">
                 </div>
                 
-                <p class="text-xs text-stone-500 mb-4 font-bold">Número de validación: 977399056</p>
-
-                <div class="text-left space-y-3">
-                    <label class="block text-sm font-bold text-stone-700">N° de Operación o Voucher Yape</label>
-                    <input type="text" id="nroOperacion" placeholder="Ej. 12345678" class="w-full border p-3 rounded-xl outline-none focus:border-purple-600 text-center text-lg font-bold">
-                    <button onclick="verificarPagoYape()" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-xl font-bold transition shadow-lg">Verificar Pago y Ver Teléfono</button>
+                <!-- Indicación solicitada -->
+                <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl mb-6">
+                    <p class="text-xs font-bold text-purple-900 leading-relaxed">Enviar imagen de Yape con el código del producto al WhatsApp <span class="text-amber-700 text-sm">977399056</span></p>
                 </div>
+
+                <button onclick="verificarPagoYape()" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-xl font-bold transition shadow-lg">Verificar Pago y Ver Teléfono</button>
             </div>
 
-            <!-- Resultado Exitoso (Teléfono Revelado) -->
+            <!-- Resultado Exitoso -->
             <div id="contenidoExito" class="hidden">
                 <div class="text-5xl mb-3">✅</div>
                 <h3 class="text-2xl font-bold text-stone-800">¡Pago Verificado!</h3>
-                <p class="text-sm text-stone-600 mt-2">Ya puedes comunicarte con el vendedor:</p>
+                <p class="text-sm text-stone-600 mt-2 font-medium text-emerald-700">En breve le llegará a su WhatsApp el número del contacto del producto.</p>
                 
                 <div class="my-6 bg-stone-100 p-4 rounded-2xl border border-stone-200">
                     <p id="infoVendedorNombre" class="font-bold text-stone-800 text-lg"></p>
@@ -169,7 +168,6 @@
             nombreActualGlobal = nombre;
             telefonoActualGlobal = telefono;
             
-            document.getElementById('nroOperacion').value = '';
             document.getElementById('contenidoPago').classList.remove('hidden');
             document.getElementById('contenidoExito').classList.add('hidden');
             
@@ -181,18 +179,10 @@
         }
 
         function verificarPagoYape() {
-            const op = document.getElementById('nroOperacion').value.trim();
-            if(!op || op.length < 4) {
-                alert("Por favor ingresa un número de operación Yape válido.");
-                return;
-            }
-
-            // Validación exitosa y despliegue del celular del vendedor o número 977399056
             document.getElementById('contenidoPago').classList.add('hidden');
             document.getElementById('contenidoExito').classList.remove('hidden');
 
             document.getElementById('infoVendedorNombre').innerText = nombreActualGlobal;
-            // Aquí se muestra el teléfono registrado para validar (977399056 o el del vendedor)
             document.getElementById('infoVendedorTel').innerText = "📞 " + (telefonoActualGlobal || "977399056");
         }
 
@@ -211,22 +201,29 @@
                     return;
                 }
 
-                grid.innerHTML = data.map(p => `
-                    <div class="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
-                        <div>
-                            <img src="${p.fotos[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363'}" class="w-full h-48 object-cover">
-                            <div class="p-6">
-                                <span class="text-xs font-bold text-amber-700 uppercase bg-amber-50 px-3 py-1 rounded-full">${p.categoria}</span>
-                                <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
-                                <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
-                                <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
+                grid.innerHTML = data.map(p => {
+                    // Generar un código único basado en el ID o usar uno por defecto
+                    const codigoProducto = `USADO-${1000 + p.id}`;
+                    return `
+                        <div class="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
+                            <div>
+                                <img src="${p.fotos[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363'}" class="w-full h-48 object-cover">
+                                <div class="p-6">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-xs font-bold text-amber-700 uppercase bg-amber-50 px-3 py-1 rounded-full">${p.categoria}</span>
+                                        <span class="text-xs font-mono font-bold bg-stone-100 text-stone-700 px-2 py-1 rounded">Código: ${codigoProducto}</span>
+                                    </div>
+                                    <h4 class="font-bold text-lg text-stone-800 mt-2">${p.titulo}</h4>
+                                    <p class="text-amber-700 font-black text-xl mt-1">S/ ${p.precio.toFixed(2)}</p>
+                                    <p class="text-sm text-stone-600 mt-2 line-clamp-2">${p.descripcion}</p>
+                                </div>
+                            </div>
+                            <div class="p-6 pt-0">
+                                <button onclick="abrirModalContacto('${p.vendedor.nombre}', '${p.vendedor.telefono}')" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md">Contactar Vendedor</button>
                             </div>
                         </div>
-                        <div class="p-6 pt-0">
-                            <button onclick="abrirModalContacto('${p.vendedor.nombre}', '${p.vendedor.telefono}')" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md">Contactar Vendedor</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } catch (e) {
                 console.error("Error al cargar productos", e);
             }
