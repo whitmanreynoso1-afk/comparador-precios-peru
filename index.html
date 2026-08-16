@@ -129,34 +129,20 @@
                     <img src="qr-yape.png" alt="QR Yape" class="w-48 h-48 object-contain rounded-xl mx-auto bg-white">
                 </div>
                 
-                <!-- Indicación solicitada -->
-                <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl mb-6">
+                <!-- Indicación de envío de imagen con el código -->
+                <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl mb-4">
                     <p class="text-xs font-bold text-purple-900 leading-relaxed">Enviar imagen de Yape con el código del producto al WhatsApp <span class="text-amber-700 text-sm">977399056</span></p>
                 </div>
 
-                <button onclick="verificarPagoYape()" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-xl font-bold transition shadow-lg">Verificar Pago y Ver Teléfono</button>
-            </div>
-
-            <!-- Resultado Exitoso -->
-            <div id="contenidoExito" class="hidden">
-                <div class="text-5xl mb-3">✅</div>
-                <h3 class="text-2xl font-bold text-stone-800">¡Pago Verificado!</h3>
-                <p class="text-sm text-stone-600 mt-2 font-medium text-emerald-700">En breve le llegará a su WhatsApp el número del contacto del producto.</p>
-                
-                <div class="my-6 bg-stone-100 p-4 rounded-2xl border border-stone-200">
-                    <p id="infoVendedorNombre" class="font-bold text-stone-800 text-lg"></p>
-                    <p id="infoVendedorTel" class="text-amber-700 font-black text-2xl mt-1"></p>
+                <!-- Nuevo cuadro de aviso en lugar del botón -->
+                <div class="bg-purple-700 text-white py-4 px-4 rounded-xl font-bold shadow-lg text-sm">
+                    En unos segundos le llegará el número de contacto a su WhatsApp
                 </div>
-
-                <button onclick="cerrarModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition">Entendido</button>
             </div>
         </div>
     </div>
 
     <script>
-        let telefonoActualGlobal = "";
-        let nombreActualGlobal = "";
-
         function abrirModalVenta() {
             document.getElementById('modalVenta').classList.remove('hidden');
         }
@@ -164,26 +150,12 @@
             document.getElementById('modalVenta').classList.add('hidden');
         }
 
-        function abrirModalContacto(nombre, telefono) {
-            nombreActualGlobal = nombre;
-            telefonoActualGlobal = telefono;
-            
-            document.getElementById('contenidoPago').classList.remove('hidden');
-            document.getElementById('contenidoExito').classList.add('hidden');
-            
+        function abrirModalContacto() {
             document.getElementById('modalContacto').classList.remove('hidden');
         }
 
         function cerrarModalContacto() {
             document.getElementById('modalContacto').classList.add('hidden');
-        }
-
-        function verificarPagoYape() {
-            document.getElementById('contenidoPago').classList.add('hidden');
-            document.getElementById('contenidoExito').classList.remove('hidden');
-
-            document.getElementById('infoVendedorNombre').innerText = nombreActualGlobal;
-            document.getElementById('infoVendedorTel').innerText = "📞 " + (telefonoActualGlobal || "977399056");
         }
 
         async function cargarProductos(query = "", categoria = "") {
@@ -202,7 +174,6 @@
                 }
 
                 grid.innerHTML = data.map(p => {
-                    // Generar un código único basado en el ID o usar uno por defecto
                     const codigoProducto = `USADO-${1000 + p.id}`;
                     return `
                         <div class="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
@@ -219,7 +190,7 @@
                                 </div>
                             </div>
                             <div class="p-6 pt-0">
-                                <button onclick="abrirModalContacto('${p.vendedor.nombre}', '${p.vendedor.telefono}')" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md">Contactar Vendedor</button>
+                                <button onclick="abrirModalContacto()" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition shadow-md">Contactar Vendedor</button>
                             </div>
                         </div>
                     `;
